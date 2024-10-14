@@ -38,7 +38,7 @@ func TestEthProtocolNegotiation(t *testing.T) {
 	}{
 		{
 			conn: &Conn{
-				ourHighestProtoVersion: 65,
+				OurHighestProtoVersion: 65,
 			},
 			caps: []p2p.Cap{
 				{Name: "eth", Version: 63},
@@ -49,7 +49,7 @@ func TestEthProtocolNegotiation(t *testing.T) {
 		},
 		{
 			conn: &Conn{
-				ourHighestProtoVersion: 65,
+				OurHighestProtoVersion: 65,
 			},
 			caps: []p2p.Cap{
 				{Name: "eth", Version: 63},
@@ -60,7 +60,7 @@ func TestEthProtocolNegotiation(t *testing.T) {
 		},
 		{
 			conn: &Conn{
-				ourHighestProtoVersion: 65,
+				OurHighestProtoVersion: 65,
 			},
 			caps: []p2p.Cap{
 				{Name: "eth", Version: 63},
@@ -71,7 +71,7 @@ func TestEthProtocolNegotiation(t *testing.T) {
 		},
 		{
 			conn: &Conn{
-				ourHighestProtoVersion: 64,
+				OurHighestProtoVersion: 64,
 			},
 			caps: []p2p.Cap{
 				{Name: "eth", Version: 63},
@@ -82,7 +82,7 @@ func TestEthProtocolNegotiation(t *testing.T) {
 		},
 		{
 			conn: &Conn{
-				ourHighestProtoVersion: 65,
+				OurHighestProtoVersion: 65,
 			},
 			caps: []p2p.Cap{
 				{Name: "eth", Version: 0},
@@ -93,7 +93,7 @@ func TestEthProtocolNegotiation(t *testing.T) {
 		},
 		{
 			conn: &Conn{
-				ourHighestProtoVersion: 64,
+				OurHighestProtoVersion: 64,
 			},
 			caps: []p2p.Cap{
 				{Name: "eth", Version: 63},
@@ -104,7 +104,7 @@ func TestEthProtocolNegotiation(t *testing.T) {
 		},
 		{
 			conn: &Conn{
-				ourHighestProtoVersion: 65,
+				OurHighestProtoVersion: 65,
 			},
 			caps: []p2p.Cap{
 				{Name: "eth", Version: 63},
