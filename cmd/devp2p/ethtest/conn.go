@@ -360,3 +360,94 @@ loop:
 	}
 	return nil
 }
+
+type ErrDisconnect struct {
+	Reason p2p.DiscReason
+}
+
+func (e ErrDisconnect) Error() string {
+	return fmt.Sprintf("disconnect: %v", e.Reason)
+}
+
+func (c *Conn) Identify() (*Hello, *eth.StatusPacket, error) {
+	// Write hello to client.
+	pub0 := crypto.FromECDSAPub(&c.ourKey.PublicKey)[1:]
+	ourHandshake := &protoHandshake{
+		Version: 5,
+		Caps:    c.caps,
+		ID:      pub0,
+	}
+
+	if err := c.Write(baseProto, handshakeMsg, ourHandshake); err != nil {
+		return nil, nil, fmt.Errorf("write to connection failed: %v", err)
+	}
+
+	var (
+		helloMsg  *Hello
+		statusMsg *eth.StatusPacket
+	)
+
+	for {
+		code, data, err := c.Read()
+		if err != nil {
+			return helloMsg, statusMsg, fmt.Errorf("failed to read from connection: %w", err)
+		}
+
+		switch code {
+		case handshakeMsg:
+			msg := new(protoHandshake)
+			if err := rlp.DecodeBytes(data, &msg); err != nil {
+				return helloMsg, statusMsg, fmt.Errorf("error decoding handshake msg: %v", err)
+			}
+			// Set snappy if version is at least 5.
+			if msg.Version >= 5 {
+				c.SetSnappy(true)
+			}
+			c.negotiateEthProtocol(msg.Caps)
+			if c.negotiatedProtoVersion == 0 {
+				return helloMsg, statusMsg, fmt.Errorf("could not negotiate eth protocol (remote caps: %v, local eth version: %v)", msg.Caps, c.ourHighestProtoVersion)
+			}
+			// If we require snap, verify that it was negotiated.
+			if c.ourHighestSnapProtoVersion != c.negotiatedSnapProtoVersion {
+				return helloMsg, statusMsg, fmt.Errorf("could not negotiate snap protocol (remote caps: %v, local snap version: %v)", msg.Caps, c.ourHighestSnapProtoVersion)
+			}
+
+			helloMsg = msg
+		case eth.StatusMsg + protoOffset(ethProto):
+			msg := new(eth.StatusPacket)
+			if err := rlp.DecodeBytes(data, &msg); err != nil {
+				return helloMsg, statusMsg, fmt.Errorf("error decoding status packet: %w", err)
+			}
+
+			statusMsg = msg
+		case discMsg:
+			var msg []p2p.DiscReason
+			if err = rlp.DecodeBytes(data, &msg); err != nil {
+				return helloMsg, statusMsg, fmt.Errorf("malformed disconnect message: %w", err)
+			} else if len(msg) == 0 {
+				return helloMsg, statusMsg, fmt.Errorf("invalid disconnect message")
+			} else if len(msg) == 1 {
+				return helloMsg, statusMsg, fmt.Errorf("disconnect received: %w", ErrDisconnect{Reason: msg[0]})
+			} else {
+				errs := make([]error, 0, len(msg))
+				for _, reason := range msg {
+					errs = append(errs, ErrDisconnect{Reason: reason})
+				}
+				return helloMsg, statusMsg, fmt.Errorf("disconnect received: %w", errors.Join(errs...))
+			}
+		case pingMsg:
+			// TODO (renaynay): in the future, this should be an error
+			// (PINGs should not be a response upon fresh connection)
+			c.Write(baseProto, pongMsg, nil)
+			continue
+		case pongMsg:
+			continue
+		default:
+			return helloMsg, statusMsg, fmt.Errorf("bad status message: code %d", code)
+		}
+
+		if helloMsg != nil && statusMsg != nil {
+			return helloMsg, statusMsg, nil
+		}
+	}
+}
