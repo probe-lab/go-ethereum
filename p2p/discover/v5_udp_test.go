@@ -404,14 +404,14 @@ func TestUDPv5_callTimeoutReset(t *testing.T) {
 
 	// Serve two responses, slowly.
 	test.waitPacketOut(func(p *v5wire.Findnode, addr netip.AddrPort, _ v5wire.Nonce) {
-		time.Sleep(respTimeout - 50*time.Millisecond)
+		time.Sleep(RespTimeout - 50*time.Millisecond)
 		test.packetIn(&v5wire.Nodes{
 			ReqID:     p.ReqID,
 			RespCount: 2,
 			Nodes:     nodesToRecords(nodes[:4]),
 		})
 
-		time.Sleep(respTimeout - 50*time.Millisecond)
+		time.Sleep(RespTimeout - 50*time.Millisecond)
 		test.packetIn(&v5wire.Nodes{
 			ReqID:     p.ReqID,
 			RespCount: 2,
