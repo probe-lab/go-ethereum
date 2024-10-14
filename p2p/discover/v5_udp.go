@@ -328,7 +328,7 @@ func (t *UDPv5) lookupWorker(destNode *enode.Node, target enode.ID) ([]*enode.No
 		err   error
 	)
 	var r []*enode.Node
-	r, err = t.findnode(destNode, dists)
+	r, err = t.FindNode(destNode, dists)
 	if errors.Is(err, errClosed) {
 		return nil, err
 	}
@@ -373,7 +373,7 @@ func (t *UDPv5) ping(n *enode.Node) (uint64, error) {
 
 // RequestENR requests n's record.
 func (t *UDPv5) RequestENR(n *enode.Node) (*enode.Node, error) {
-	nodes, err := t.findnode(n, []uint{0})
+	nodes, err := t.FindNode(n, []uint{0})
 	if err != nil {
 		return nil, err
 	}
@@ -383,8 +383,8 @@ func (t *UDPv5) RequestENR(n *enode.Node) (*enode.Node, error) {
 	return nodes[0], nil
 }
 
-// findnode calls FINDNODE on a node and waits for responses.
-func (t *UDPv5) findnode(n *enode.Node, distances []uint) ([]*enode.Node, error) {
+// FindNode calls FINDNODE on a node and waits for responses.
+func (t *UDPv5) FindNode(n *enode.Node, distances []uint) ([]*enode.Node, error) {
 	resp := t.callToNode(n, v5wire.NodesMsg, &v5wire.Findnode{Distances: distances})
 	return t.waitForNodes(resp, distances)
 }
