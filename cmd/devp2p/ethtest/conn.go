@@ -59,17 +59,17 @@ func (s *Suite) dialAs(key *ecdsa.PrivateKey) (*Conn, error) {
 		return nil, err
 	}
 	conn := Conn{Conn: rlpx.NewConn(fd, s.Dest.Pubkey())}
-	conn.ourKey = key
-	_, err = conn.Handshake(conn.ourKey)
+	conn.OurKey = key
+	_, err = conn.Handshake(conn.OurKey)
 	if err != nil {
 		conn.Close()
 		return nil, err
 	}
-	conn.caps = []p2p.Cap{
+	conn.Caps = []p2p.Cap{
 		{Name: "eth", Version: 67},
 		{Name: "eth", Version: 68},
 	}
-	conn.ourHighestProtoVersion = 68
+	conn.OurHighestProtoVersion = 68
 	return &conn, nil
 }
 
@@ -79,7 +79,7 @@ func (s *Suite) dialSnap() (*Conn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("dial failed: %v", err)
 	}
-	conn.caps = append(conn.caps, p2p.Cap{Name: "snap", Version: 1})
+	conn.Caps = append(conn.Caps, p2p.Cap{Name: "snap", Version: 1})
 	conn.ourHighestSnapProtoVersion = 1
 	return conn, nil
 }
@@ -87,12 +87,12 @@ func (s *Suite) dialSnap() (*Conn, error) {
 // Conn represents an individual connection with a peer
 type Conn struct {
 	*rlpx.Conn
-	ourKey                     *ecdsa.PrivateKey
+	OurKey                     *ecdsa.PrivateKey
 	negotiatedProtoVersion     uint
 	negotiatedSnapProtoVersion uint
-	ourHighestProtoVersion     uint
+	OurHighestProtoVersion     uint
 	ourHighestSnapProtoVersion uint
-	caps                       []p2p.Cap
+	Caps                       []p2p.Cap
 }
 
 // Read reads a packet from the connection.
@@ -239,10 +239,10 @@ func (c *Conn) peer(chain *Chain, status *eth.StatusPacket) error {
 // handshake performs a protocol handshake with the node.
 func (c *Conn) handshake() error {
 	// Write hello to client.
-	pub0 := crypto.FromECDSAPub(&c.ourKey.PublicKey)[1:]
+	pub0 := crypto.FromECDSAPub(&c.OurKey.PublicKey)[1:]
 	ourHandshake := &protoHandshake{
 		Version: 5,
-		Caps:    c.caps,
+		Caps:    c.Caps,
 		ID:      pub0,
 	}
 	if err := c.Write(baseProto, handshakeMsg, ourHandshake); err != nil {
@@ -265,7 +265,7 @@ func (c *Conn) handshake() error {
 		}
 		c.negotiateEthProtocol(msg.Caps)
 		if c.negotiatedProtoVersion == 0 {
-			return fmt.Errorf("could not negotiate eth protocol (remote caps: %v, local eth version: %v)", msg.Caps, c.ourHighestProtoVersion)
+			return fmt.Errorf("could not negotiate eth protocol (remote caps: %v, local eth version: %v)", msg.Caps, c.OurHighestProtoVersion)
 		}
 		// If we require snap, verify that it was negotiated.
 		if c.ourHighestSnapProtoVersion != c.negotiatedSnapProtoVersion {
@@ -285,7 +285,7 @@ func (c *Conn) negotiateEthProtocol(caps []p2p.Cap) {
 	for _, capability := range caps {
 		switch capability.Name {
 		case "eth":
-			if capability.Version > highestEthVersion && capability.Version <= c.ourHighestProtoVersion {
+			if capability.Version > highestEthVersion && capability.Version <= c.OurHighestProtoVersion {
 				highestEthVersion = capability.Version
 			}
 		case "snap":
@@ -322,7 +322,7 @@ loop:
 			if have, want := msg.ForkID, chain.ForkID(); !reflect.DeepEqual(have, want) {
 				return fmt.Errorf("wrong fork ID in status: have %v, want %v", have, want)
 			}
-			if have, want := msg.ProtocolVersion, c.ourHighestProtoVersion; have != uint32(want) {
+			if have, want := msg.ProtocolVersion, c.OurHighestProtoVersion; have != uint32(want) {
 				return fmt.Errorf("wrong protocol version: have %v, want %v", have, want)
 			}
 			break loop
@@ -371,10 +371,10 @@ func (e ErrDisconnect) Error() string {
 
 func (c *Conn) Identify() (*Hello, *eth.StatusPacket, error) {
 	// Write hello to client.
-	pub0 := crypto.FromECDSAPub(&c.ourKey.PublicKey)[1:]
+	pub0 := crypto.FromECDSAPub(&c.OurKey.PublicKey)[1:]
 	ourHandshake := &protoHandshake{
 		Version: 5,
-		Caps:    c.caps,
+		Caps:    c.Caps,
 		ID:      pub0,
 	}
 
@@ -405,7 +405,7 @@ func (c *Conn) Identify() (*Hello, *eth.StatusPacket, error) {
 			}
 			c.negotiateEthProtocol(msg.Caps)
 			if c.negotiatedProtoVersion == 0 {
-				return helloMsg, statusMsg, fmt.Errorf("could not negotiate eth protocol (remote caps: %v, local eth version: %v)", msg.Caps, c.ourHighestProtoVersion)
+				return helloMsg, statusMsg, fmt.Errorf("could not negotiate eth protocol (remote caps: %v, local eth version: %v)", msg.Caps, c.OurHighestProtoVersion)
 			}
 			// If we require snap, verify that it was negotiated.
 			if c.ourHighestSnapProtoVersion != c.negotiatedSnapProtoVersion {
