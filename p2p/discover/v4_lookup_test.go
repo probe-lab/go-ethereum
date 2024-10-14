@@ -250,7 +250,7 @@ var lookupTestnet = &preminedTestnet{
 
 type preminedTestnet struct {
 	target v4wire.Pubkey
-	dists  [hashBits + 1][]*ecdsa.PrivateKey
+	dists  [HashBits + 1][]*ecdsa.PrivateKey
 }
 
 func (tn *preminedTestnet) len() int {
