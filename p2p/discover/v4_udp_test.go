@@ -240,7 +240,7 @@ func TestUDPv4_findnodeTimeout(t *testing.T) {
 	toaddr := netip.AddrPortFrom(netip.MustParseAddr("1.2.3.4"), 2222)
 	toid := enode.ID{1, 2, 3, 4}
 	target := v4wire.Pubkey{4, 5, 6, 7}
-	result, err := test.udp.findnode(toid, toaddr, target)
+	result, err := test.udp.FindNode(toid, toaddr, target)
 	if err != errTimeout {
 		t.Error("expected timeout error, got", err)
 	}
@@ -315,7 +315,7 @@ func TestUDPv4_findnodeMultiReply(t *testing.T) {
 	resultc, errc := make(chan []*enode.Node, 1), make(chan error, 1)
 	go func() {
 		rid := v4wire.EncodePubkey(&test.remotekey.PublicKey).ID()
-		ns, err := test.udp.findnode(rid, test.remoteaddr, testTarget)
+		ns, err := test.udp.FindNode(rid, test.remoteaddr, testTarget)
 		if err != nil && len(ns) == 0 {
 			errc <- err
 		} else {

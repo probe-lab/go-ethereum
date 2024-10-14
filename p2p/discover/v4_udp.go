@@ -303,14 +303,14 @@ func (t *UDPv4) newLookup(ctx context.Context, targetKey v4wire.Pubkey) *lookup 
 		if !ok {
 			return nil, errNoUDPEndpoint
 		}
-		return t.findnode(n.ID(), addr, targetKey)
+		return t.FindNode(n.ID(), addr, targetKey)
 	})
 	return it
 }
 
 // findnode sends a findnode request to the given node and waits until
 // the node has sent up to k neighbors.
-func (t *UDPv4) findnode(toid enode.ID, toAddrPort netip.AddrPort, target v4wire.Pubkey) ([]*enode.Node, error) {
+func (t *UDPv4) FindNode(toid enode.ID, toAddrPort netip.AddrPort, target v4wire.Pubkey) ([]*enode.Node, error) {
 	t.ensureBond(toid, toAddrPort)
 
 	// Add a matcher for 'neighbours' replies to the pending reply queue. The matcher is
