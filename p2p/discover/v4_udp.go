@@ -49,7 +49,7 @@ var (
 )
 
 var (
-	RespTimeout = 500 * time.Millisecond
+	RespTimeout = 1 * time.Second
 	Expiration  = 20 * time.Second
 )
 
