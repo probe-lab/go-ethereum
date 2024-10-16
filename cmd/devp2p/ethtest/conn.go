@@ -395,21 +395,22 @@ func (c *Conn) Identify() (*Hello, *eth.StatusPacket, error) {
 
 		switch code {
 		case handshakeMsg:
-			msg := new(protoHandshake)
-			if err := rlp.DecodeBytes(data, &msg); err != nil {
+			if err := rlp.DecodeBytes(data, &helloMsg); err != nil {
 				return helloMsg, statusMsg, fmt.Errorf("error decoding handshake msg: %v", err)
 			}
+
 			// Set snappy if version is at least 5.
-			if msg.Version >= 5 {
+			if helloMsg.Version >= 5 {
 				c.SetSnappy(true)
 			}
-			c.negotiateEthProtocol(msg.Caps)
+
+			c.negotiateEthProtocol(helloMsg.Caps)
 			if c.negotiatedProtoVersion == 0 {
-				return helloMsg, statusMsg, fmt.Errorf("could not negotiate eth protocol (remote caps: %v, local eth version: %v)", msg.Caps, c.OurHighestProtoVersion)
+				return helloMsg, statusMsg, fmt.Errorf("could not negotiate eth protocol (remote caps: %v, local eth version: %v)", helloMsg.Caps, c.OurHighestProtoVersion)
 			}
 			// If we require snap, verify that it was negotiated.
 			if c.ourHighestSnapProtoVersion != c.negotiatedSnapProtoVersion {
-				return helloMsg, statusMsg, fmt.Errorf("could not negotiate snap protocol (remote caps: %v, local snap version: %v)", msg.Caps, c.ourHighestSnapProtoVersion)
+				return helloMsg, statusMsg, fmt.Errorf("could not negotiate snap protocol (remote caps: %v, local snap version: %v)", helloMsg.Caps, c.ourHighestSnapProtoVersion)
 			}
 
 			helloMsg = msg
