@@ -598,13 +598,17 @@ func (t *UDPv4) ensureBond(toid enode.ID, toaddr netip.AddrPort) {
 }
 
 func (t *UDPv4) nodeFromRPC(sender netip.AddrPort, rn v4wire.Node) (*enode.Node, error) {
+	return NodeFromRPC(sender, rn, t.netrestrict)
+}
+
+func NodeFromRPC(sender netip.AddrPort, rn v4wire.Node, netrestrict *netutil.Netlist) (*enode.Node, error) {
 	if rn.UDP <= 1024 {
 		return nil, errLowPort
 	}
 	if err := netutil.CheckRelayIP(sender.Addr().AsSlice(), rn.IP); err != nil {
 		return nil, err
 	}
-	if t.netrestrict != nil && !t.netrestrict.Contains(rn.IP) {
+	if netrestrict != nil && !netrestrict.Contains(rn.IP) {
 		return nil, errors.New("not contained in netrestrict list")
 	}
 	key, err := v4wire.DecodePubkey(crypto.S256(), rn.ID)
