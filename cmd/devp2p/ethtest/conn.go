@@ -432,7 +432,6 @@ func (c *Conn) Identify() (*Hello, *eth.StatusPacket69, error) {
 				return helloMsg, statusMsg, fmt.Errorf("could not negotiate snap protocol (remote caps: %v, local snap version: %v)", helloMsg.Caps, c.ourHighestSnapProtoVersion)
 			}
 
-			helloMsg = msg
 		case eth.StatusMsg + protoOffset(ethProto):
 			msg := new(eth.StatusPacket69)
 			if err := rlp.DecodeBytes(data, &msg); err != nil {
@@ -447,11 +446,11 @@ func (c *Conn) Identify() (*Hello, *eth.StatusPacket69, error) {
 			} else if len(msg) == 0 {
 				return helloMsg, statusMsg, fmt.Errorf("invalid disconnect message")
 			} else if len(msg) == 1 {
-				return helloMsg, statusMsg, fmt.Errorf("disconnect received: %w", ErrDisconnect{Reason: msg[0]})
+				return helloMsg, statusMsg, fmt.Errorf("disconnect received: %w", msg[0])
 			} else {
 				errs := make([]error, 0, len(msg))
 				for _, reason := range msg {
-					errs = append(errs, ErrDisconnect{Reason: reason})
+					errs = append(errs, reason)
 				}
 				return helloMsg, statusMsg, fmt.Errorf("disconnect received: %w", errors.Join(errs...))
 			}
