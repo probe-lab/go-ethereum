@@ -57,7 +57,7 @@ func newLookup(ctx context.Context, tab *Table, target enode.ID, q queryFunc) *l
 	it.seen[tab.self().ID()] = true
 
 	// Initialize the lookup with nodes from table.
-	closest := it.tab.findnodeByID(it.result.target, bucketSize, false)
+	closest := it.tab.findnodeByID(it.result.target, BucketSize, false)
 	it.addNodes(closest.entries)
 	return it
 }
@@ -96,7 +96,7 @@ func (it *lookup) addNodes(nodes []*enode.Node) {
 	for _, n := range nodes {
 		if n != nil && !it.seen[n.ID()] {
 			it.seen[n.ID()] = true
-			it.result.push(n, bucketSize)
+			it.result.push(n, BucketSize)
 			it.replyBuffer = append(it.replyBuffer, n)
 		}
 	}

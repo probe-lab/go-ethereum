@@ -108,7 +108,7 @@ func testPingReplace(t *testing.T, newNodeIsResponding, lastInBucketIsResponding
 	// Check bucket content.
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
-	wantSize := bucketSize
+	wantSize := BucketSize
 	if !lastInBucketIsResponding && !newNodeIsResponding {
 		wantSize--
 	}
@@ -264,7 +264,7 @@ func (*closeTest) Generate(rand *rand.Rand, size int) reflect.Value {
 	t := &closeTest{
 		Self:   gen(enode.ID{}, rand).(enode.ID),
 		Target: gen(enode.ID{}, rand).(enode.ID),
-		N:      rand.Intn(bucketSize),
+		N:      rand.Intn(BucketSize),
 	}
 	for _, id := range gen([]enode.ID{}, rand).([]enode.ID) {
 		r := new(enr.Record)
