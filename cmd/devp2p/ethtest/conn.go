@@ -361,14 +361,6 @@ loop:
 	return nil
 }
 
-type ErrDisconnect struct {
-	Reason p2p.DiscReason
-}
-
-func (e ErrDisconnect) Error() string {
-	return fmt.Sprintf("disconnect: %v", e.Reason)
-}
-
 func (c *Conn) Identify() (*Hello, *eth.StatusPacket, error) {
 	// Write hello to client.
 	pub0 := crypto.FromECDSAPub(&c.OurKey.PublicKey)[1:]
@@ -413,7 +405,6 @@ func (c *Conn) Identify() (*Hello, *eth.StatusPacket, error) {
 				return helloMsg, statusMsg, fmt.Errorf("could not negotiate snap protocol (remote caps: %v, local snap version: %v)", helloMsg.Caps, c.ourHighestSnapProtoVersion)
 			}
 
-			helloMsg = msg
 		case eth.StatusMsg + protoOffset(ethProto):
 			msg := new(eth.StatusPacket)
 			if err := rlp.DecodeBytes(data, &msg); err != nil {
@@ -428,11 +419,11 @@ func (c *Conn) Identify() (*Hello, *eth.StatusPacket, error) {
 			} else if len(msg) == 0 {
 				return helloMsg, statusMsg, fmt.Errorf("invalid disconnect message")
 			} else if len(msg) == 1 {
-				return helloMsg, statusMsg, fmt.Errorf("disconnect received: %w", ErrDisconnect{Reason: msg[0]})
+				return helloMsg, statusMsg, fmt.Errorf("disconnect received: %w", msg[0])
 			} else {
 				errs := make([]error, 0, len(msg))
 				for _, reason := range msg {
-					errs = append(errs, ErrDisconnect{Reason: reason})
+					errs = append(errs, reason)
 				}
 				return helloMsg, statusMsg, fmt.Errorf("disconnect received: %w", errors.Join(errs...))
 			}
