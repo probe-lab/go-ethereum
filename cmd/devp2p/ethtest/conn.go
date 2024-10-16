@@ -474,9 +474,6 @@ func (c *Conn) Identify() (*Hello, *eth.StatusPacket69, error) {
 				return helloMsg, statusMsg, fmt.Errorf("disconnect received: %w", errors.Join(errs...))
 			}
 		case pingMsg:
-			// TODO (renaynay): in the future, this should be an error
-			// (PINGs should not be a response upon fresh connection)
-			c.Write(baseProto, pongMsg, nil)
 			continue
 		case pongMsg:
 			continue
