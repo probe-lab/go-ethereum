@@ -318,7 +318,7 @@ func (t *UDPv4) FindNode(toid enode.ID, toAddrPort netip.AddrPort, target v4wire
 
 	// Add a matcher for 'neighbours' replies to the pending reply queue. The matcher is
 	// active until enough nodes have been received.
-	nodes := make([]*enode.Node, 0, bucketSize)
+	nodes := make([]*enode.Node, 0, BucketSize)
 	nreceived := 0
 	rm := t.pending(toid, toAddrPort.Addr(), v4wire.NeighborsPacket, func(r v4wire.Packet) (matched bool, requestDone bool) {
 		reply := r.(*v4wire.Neighbors)
@@ -331,7 +331,7 @@ func (t *UDPv4) FindNode(toid enode.ID, toAddrPort netip.AddrPort, target v4wire
 			}
 			nodes = append(nodes, n)
 		}
-		return true, nreceived >= bucketSize
+		return true, nreceived >= BucketSize
 	})
 	t.send(toAddrPort, toid, &v4wire.Findnode{
 		Target:     target,
@@ -474,7 +474,7 @@ func (t *UDPv4) loop() {
 
 		case r := <-t.gotreply:
 			var matched bool // whether any replyMatcher considered the reply acceptable.
-			for el := plist.Front(); el != nil; el = el.Next() {
+			for el := plist.Front(); !matched && el != nil; el = el.Next() {
 				p := el.Value.(*replyMatcher)
 				if p.from == r.from && p.ptype == r.data.Kind() && p.ip == r.ip {
 					ok, requestDone := p.callback(r.data)
@@ -750,7 +750,7 @@ func (t *UDPv4) handleFindnode(h *packetHandlerV4, from netip.AddrPort, fromID e
 	// Determine closest nodes.
 	target := enode.ID(crypto.Keccak256Hash(req.Target[:]))
 	preferLive := !t.tab.cfg.NoFindnodeLivenessCheck
-	closest := t.tab.findnodeByID(target, bucketSize, preferLive).entries
+	closest := t.tab.findnodeByID(target, BucketSize, preferLive).entries
 
 	// Send neighbors in chunks with at most maxNeighbors per packet
 	// to stay below the packet size limit.

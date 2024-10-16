@@ -40,7 +40,7 @@ import (
 
 const (
 	alpha           = 3  // Kademlia concurrency factor
-	bucketSize      = 16 // Kademlia bucket size
+	BucketSize      = 16 // Kademlia bucket size
 	maxReplacements = 10 // Size of per-bucket replacement list
 
 	// We keep buckets for the upper 1/15 of distances because
@@ -521,7 +521,7 @@ func (tab *Table) handleAddNode(req addNodeOp) bool {
 		// Already in bucket.
 		return false
 	}
-	if len(b.entries) >= bucketSize {
+	if len(b.entries) >= BucketSize {
 		// Bucket full, maybe add as replacement.
 		tab.addReplacement(b, req.node)
 		return false
@@ -674,7 +674,7 @@ func (tab *Table) handleTrackRequest(op trackRequestOp) {
 	// many times, but only if there are enough other nodes in the bucket. This latter
 	// condition specifically exists to make bootstrapping in smaller test networks more
 	// reliable.
-	if fails >= maxFindnodeFailures && len(b.entries) >= bucketSize/4 {
+	if fails >= maxFindnodeFailures && len(b.entries) >= BucketSize/4 {
 		tab.deleteInBucket(b, op.node.ID())
 	}
 
