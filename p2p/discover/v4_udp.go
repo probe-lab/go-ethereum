@@ -593,7 +593,10 @@ func (t *UDPv4) ensureBond(toid enode.ID, toaddr netip.AddrPort) {
 		rm := t.sendPing(toid, toaddr, nil)
 		<-rm.errc
 		// Wait for them to ping back and process our pong.
-		time.Sleep(RespTimeout)
+		select {
+		case <-time.After(RespTimeout):
+		case <-t.closeCtx.Done():
+		}
 	}
 }
 
