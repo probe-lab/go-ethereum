@@ -474,7 +474,7 @@ func (t *UDPv4) loop() {
 
 		case r := <-t.gotreply:
 			var matched bool // whether any replyMatcher considered the reply acceptable.
-			for el := plist.Front(); !matched && el != nil; el = el.Next() {
+			for el := plist.Front(); el != nil; el = el.Next() {
 				p := el.Value.(*replyMatcher)
 				if p.from == r.from && p.ptype == r.data.Kind() && p.ip == r.ip {
 					ok, requestDone := p.callback(r.data)
