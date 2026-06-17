@@ -59,7 +59,7 @@ func (s *Suite) sendTxs(t *utesting.T, txs []*types.Transaction) error {
 
 	var (
 		got = make(map[common.Hash]bool)
-		end = time.Now().Add(timeout)
+		end = time.Now().Add(Timeout)
 	)
 
 	// Wait for the transaction announcements, make sure all txs ar propagated.
@@ -119,7 +119,7 @@ func (s *Suite) sendInvalidTxs(t *utesting.T, txs []*types.Transaction) error {
 	if err = sendConn.peer(s.chain, nil); err != nil {
 		return fmt.Errorf("peering failed: %v", err)
 	}
-	sendConn.SetDeadline(time.Now().Add(timeout))
+	sendConn.SetDeadline(time.Now().Add(Timeout))
 
 	// Open receiving conn.
 	recvConn, err := s.dial()
@@ -130,7 +130,7 @@ func (s *Suite) sendInvalidTxs(t *utesting.T, txs []*types.Transaction) error {
 	if err = recvConn.peer(s.chain, nil); err != nil {
 		return fmt.Errorf("peering failed: %v", err)
 	}
-	recvConn.SetDeadline(time.Now().Add(timeout))
+	recvConn.SetDeadline(time.Now().Add(Timeout))
 
 	if err = sendConn.Write(ethProto, eth.TransactionsMsg, txs); err != nil {
 		return fmt.Errorf("failed to write message to connection: %w", err)
@@ -143,7 +143,7 @@ func (s *Suite) sendInvalidTxs(t *utesting.T, txs []*types.Transaction) error {
 	}
 
 	// Get responses.
-	recvConn.SetReadDeadline(time.Now().Add(timeout))
+	recvConn.SetReadDeadline(time.Now().Add(Timeout))
 	for {
 		msg, err := recvConn.ReadEth()
 		if errors.Is(err, os.ErrDeadlineExceeded) {

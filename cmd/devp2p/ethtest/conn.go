@@ -40,7 +40,7 @@ var (
 		DisablePointerAddresses: true,
 		SortKeys:                true,
 	}
-	timeout = 2 * time.Second
+	Timeout = 2 * time.Second
 )
 
 // dial attempts to dial the given node and perform a handshake, returning the
@@ -111,7 +111,7 @@ type Conn struct {
 
 // Read reads a packet from the connection.
 func (c *Conn) Read() (uint64, []byte, error) {
-	c.SetReadDeadline(time.Now().Add(timeout))
+	c.SetReadDeadline(time.Now().Add(Timeout))
 	code, data, _, err := c.Conn.Read()
 	if err != nil {
 		return 0, nil, err
@@ -121,7 +121,7 @@ func (c *Conn) Read() (uint64, []byte, error) {
 
 // ReadMsg attempts to read a devp2p message with a specific code.
 func (c *Conn) ReadMsg(proto Proto, code uint64, msg any) error {
-	c.SetReadDeadline(time.Now().Add(timeout))
+	c.SetReadDeadline(time.Now().Add(Timeout))
 	for {
 		got, data, err := c.Read()
 		if err != nil {
@@ -135,7 +135,7 @@ func (c *Conn) ReadMsg(proto Proto, code uint64, msg any) error {
 
 // Write writes a eth packet to the connection.
 func (c *Conn) Write(proto Proto, code uint64, msg any) error {
-	c.SetWriteDeadline(time.Now().Add(timeout))
+	c.SetWriteDeadline(time.Now().Add(Timeout))
 	payload, err := rlp.EncodeToBytes(msg)
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ var errDisc error = errors.New("disconnect")
 
 // ReadEth reads an Eth sub-protocol wire message.
 func (c *Conn) ReadEth() (any, error) {
-	c.SetReadDeadline(time.Now().Add(timeout))
+	c.SetReadDeadline(time.Now().Add(Timeout))
 	for {
 		code, data, _, err := c.Conn.Read()
 		if code == discMsg {
@@ -202,7 +202,7 @@ func (c *Conn) ReadEth() (any, error) {
 // expected to only receive codes that were actually valid on the
 // negotiated protocol version.
 func (c *Conn) ReadSnap() (any, error) {
-	c.SetReadDeadline(time.Now().Add(timeout))
+	c.SetReadDeadline(time.Now().Add(Timeout))
 	for {
 		code, data, _, err := c.Conn.Read()
 		if err != nil {
