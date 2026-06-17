@@ -93,7 +93,7 @@ func (s *Suite) dialSnap2() (*Conn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("dial failed: %v", err)
 	}
-	conn.caps = append(conn.caps, p2p.Cap{Name: "snap", Version: 2})
+	conn.Caps = append(conn.Caps, p2p.Cap{Name: "snap", Version: 2})
 	conn.ourHighestSnapProtoVersion = 2
 	return conn, nil
 }
@@ -407,7 +407,7 @@ func (e ErrDisconnect) Error() string {
 	return fmt.Sprintf("disconnect: %v", e.Reason)
 }
 
-func (c *Conn) Identify() (*Hello, *eth.StatusPacket69, error) {
+func (c *Conn) Identify() (*Hello, *eth.StatusPacket, error) {
 	// Write hello to client.
 	pub0 := crypto.FromECDSAPub(&c.OurKey.PublicKey)[1:]
 	ourHandshake := &protoHandshake{
@@ -422,7 +422,7 @@ func (c *Conn) Identify() (*Hello, *eth.StatusPacket69, error) {
 
 	var (
 		helloMsg  *Hello
-		statusMsg *eth.StatusPacket69
+		statusMsg *eth.StatusPacket
 	)
 
 	for {
@@ -452,7 +452,7 @@ func (c *Conn) Identify() (*Hello, *eth.StatusPacket69, error) {
 			}
 
 		case eth.StatusMsg + protoOffset(ethProto):
-			msg := new(eth.StatusPacket69)
+			msg := new(eth.StatusPacket)
 			if err := rlp.DecodeBytes(data, &msg); err != nil {
 				return helloMsg, statusMsg, fmt.Errorf("error decoding status packet: %w", err)
 			}
